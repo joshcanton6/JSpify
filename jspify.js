@@ -12,15 +12,15 @@ const baseURL = "https://api.spotify.com/v1";
  * @returns {Promise<object>} An album
  */
 export async function getAlbum(token, id, market=null) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/albums/${id}` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/albums/${id}?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -31,16 +31,16 @@ export async function getAlbum(token, id, market=null) {
  * @returns {Promise<object>} A set of albums
  */
 export async function getSeveralAlbums(token, ids, market=null) {
-    const params = [];
-    params.push(`ids=${ids}`);
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/albums` + query, {
+    const query = new URLSearchParams({
+        ids,
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/albums?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -53,17 +53,17 @@ export async function getSeveralAlbums(token, ids, market=null) {
  * @returns {Promise<object>} Pages of tracks
  */
 export async function getAlbumTracks(token, id, market=null, limit=20, offset=0) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/albums/${id}/tracks` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/albums/${id}/tracks?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -75,17 +75,17 @@ export async function getAlbumTracks(token, id, market=null, limit=20, offset=0)
  * @returns {Promise<object>} Pages of albums
  */
 export async function getUsersSavedAlbums(token, limit=20, offset=0, market=null) {
-    const params = [];
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/albums` + query, {
+    const query = new URLSearchParams({
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset}),
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/me/albums?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -96,28 +96,24 @@ export async function getUsersSavedAlbums(token, limit=20, offset=0, market=null
  */
 export async function saveAlbumsForCurrentUser(token, ids) {
     if (typeof ids == "string") {
-        const params = [];
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/albums` + query, {
+        const query = new URLSearchParams({ids});
+        return (await fetch(`${baseURL}/me/albums?${query}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        return await parseJSON(fetch(`${baseURL}/me/albums`, {
+        return (await fetch(`${baseURL}/me/albums`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -129,28 +125,24 @@ export async function saveAlbumsForCurrentUser(token, ids) {
  */
 export async function removeUsersSavedAlbums(token, ids) {
     if (typeof ids == "string") {
-        const params = [];
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/albums` + query, {
+        const query = new URLSearchParams({ids});
+        return (await fetch(`${baseURL}/me/albums?${query}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        return await parseJSON(fetch(`${baseURL}/me/albums`, {
+        return (await fetch(`${baseURL}/me/albums`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -161,15 +153,13 @@ export async function removeUsersSavedAlbums(token, ids) {
  * @returns {Promise<boolean[]>|Promise<object>} An array of booleans on success, otherwise an `error` object
  */
 export async function checkUsersSavedAlbums(token, ids) {
-    const params = [];
-    params.push(`ids=${ids}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/albums/contains` + query, {
+    const query = new URLSearchParams({ids});
+    return (await fetch(`${baseURL}/me/albums/contains?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -180,16 +170,16 @@ export async function checkUsersSavedAlbums(token, ids) {
  * @returns {Promise<object>} A paged set of albums
  */
 export async function getNewReleases(token, limit=20, offset=0) {
-    const params = [];
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/browse/new-releases` + query, {
+    const query = new URLSearchParams({
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/browse/new-releases?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -199,12 +189,12 @@ export async function getNewReleases(token, limit=20, offset=0) {
  * @returns {Promise<object>} An artist
  */
 export async function getArtist(token, id) {
-    return await parseJSON(fetch(`${baseURL}/artists/${id}`, {
+    return (await fetch(`${baseURL}/artists/${id}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -214,15 +204,13 @@ export async function getArtist(token, id) {
  * @returns {Promise<object>} A set of artists
  */
 export async function getSeveralArtists(token, ids) {
-    const params = [];
-    params.push(`ids=${ids}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/artists` + query, {
+    const query = new URLSearchParams({ids});
+    return (await fetch(`${baseURL}/artists?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -236,18 +224,18 @@ export async function getSeveralArtists(token, ids) {
  * @returns {Promise<object>} Pages of albums
  */
 export async function getArtistsAlbums(token, id, include_groups=null, market=null, limit=20, offset=0) {
-    const params = [];
-    if (include_groups) params.push(`include_groups=${include_groups}`);
-    if (market) params.push(`market=${market}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/artists/${id}/albums` + query, {
+    const query = new URLSearchParams({
+        ...(include_groups && {include_groups}),
+        ...(market && {market}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/artists/${id}/albums?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -258,15 +246,15 @@ export async function getArtistsAlbums(token, id, include_groups=null, market=nu
  * @returns {Promise<object>} A set of tracks
  */
 export async function getArtistsTopTracks(token, id, market=null) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/artists/${id}/top-tracks` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/artists/${id}/top-tracks?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -278,17 +266,17 @@ export async function getArtistsTopTracks(token, id, market=null) {
  * @returns {Promise<object>} A paged set of categories
  */
 export async function getSeveralBrowseCategories(token, locale=null, limit=20, offset=0) {
-    const params = [];
-    if (locale) params.push(`locale=${locale}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/browse/categories` + query, {
+    const query = new URLSearchParams({
+        ...(locale && {locale}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/browse/categories?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -299,15 +287,15 @@ export async function getSeveralBrowseCategories(token, locale=null, limit=20, o
  * @returns {Promise<object>} A category
  */
 export async function getSingleBrowseCategory(token, category_id, locale=null) {
-    const params = [];
-    if (locale) params.push(`locale=${locale}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/browse/category/${category_id}` + query, {
+    const query = new URLSearchParams({
+        ...(locale && {locale})
+    });
+    return (await fetch(`${baseURL}/browse/category/${category_id}?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -316,12 +304,12 @@ export async function getSingleBrowseCategory(token, category_id, locale=null) {
  * @returns {Promise<object>} A markets object with an array of country codes
  */
 export async function getAvailableMarkets(token) {
-    return await parseJSON(fetch(`${baseURL}/markets`, {
+    return (await fetch(`${baseURL}/markets`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -334,17 +322,17 @@ export async function getAvailableMarkets(token) {
  * @returns {Promise<object>} A playlist
  */
 export async function getPlaylist(token, playlist_id, market=null, fields=null, additional_types=null) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    if (fields) params.push(`fields=${fields}`);
-    if (additional_types) params.push(`additional_types=${additional_types}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market}),
+        ...(fields && {fields}),
+        ...(additional_types && {additional_types})
+    });
+    return (await fetch(`${baseURL}/playlists/${playlist_id}?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -358,18 +346,18 @@ export async function getPlaylist(token, playlist_id, market=null, fields=null, 
  * @returns {Promise<void>|Promise<object>} An empty response if the playlist is updated, otherwise an `error` object
  */
 export async function changePlaylistDetails(token, playlist_id, name=null, public_playlist=null, collaborative=null, description=null) {
-    /** @type {PlaylistDetailsRequest} */ const body = {};
-    if (name) body.name = name;
-    if (public_playlist !== null) body.public = public_playlist;
-    if (collaborative !== null) body.collaborative = collaborative;
-    if (description !== null) body.description = description;
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
-    }));
+        body: JSON.stringify({
+            ...(name && {name}),
+            ...(public_playlist !== null && {"public": public_playlist}),
+            ...(collaborative !== null && {collaborative}),
+            ...(description !== null && {description})
+        })
+    })).json();
 }
 
 /**
@@ -384,19 +372,19 @@ export async function changePlaylistDetails(token, playlist_id, name=null, publi
  * @returns {Promise<object>} Pages of tracks
  */
 export async function getPlaylistItems(token, playlist_id, market=null, fields=null, limit=20, offset=0, additional_types=null) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    if (fields) params.push(`fields=${fields}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    if (additional_types) params.push(`additional_types=${additional_types}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market}),
+        ...(fields && {fields}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset}),
+        ...(additional_types && {additional_types})
+    });
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -410,19 +398,18 @@ export async function getPlaylistItems(token, playlist_id, market=null, fields=n
  * @returns {Promise<object>} A snapshot ID for the playlist
  */
 async function reorderPlaylistItems(token, playlist_id, range_start, insert_before, range_length=1, snapshot_id=null) {
-    /** @type {ReorderPlaylistItemsRequest} */ const body = {
-        "range_start": range_start,
-        "insert_before": insert_before,
-        "range_length": range_length
-    };
-    if (snapshot_id) body.snapshot_id = snapshot_id;
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
-    }));
+        body: JSON.stringify({
+            range_start,
+            insert_before,
+            range_length,
+            ...(snapshot_id && {snapshot_id})
+        })
+    })).json();
 }
 
 /**
@@ -434,28 +421,24 @@ async function reorderPlaylistItems(token, playlist_id, range_start, insert_befo
  */
 async function replacePlaylistItems(token, playlist_id, uris) {
     if (typeof uris == "string") {
-        const params = [];
-        params.push(`uris=${uris}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks` + query, {
+        const query = new URLSearchParams({uris});
+        return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks?${query}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(uris)) {
-        return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
+        return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "uris": uris
-            })
-        }));
+            body: JSON.stringify({uris})
+        })).json();
     }
 }
 
@@ -489,31 +472,30 @@ export async function updatePlaylistItems(token, playlist_id, uris=null, range_s
  */
 export async function addItemsToPlaylist(token, playlist_id, uris, position=null) {
     if (typeof uris == "string") {
-        const params = [];
-        params.push(`uris=${uris}`);
-        if (position) params.push(`position=${position}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks` + query, {
+        const query = new URLSearchParams({
+            uris,
+            ...(position && {position})
+        });
+        return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks?${query}`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(uris)) {
-        /** @type {AddPlaylistItemsRequest} */ const body = {
-            "uris": uris
-        };
-        if (position != null) body.position = position;
-        return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
+        return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(body)
-        }));
+            body: JSON.stringify({
+                uris,
+                ...(position && {position})
+            })
+        })).json();
     }
 }
 
@@ -521,23 +503,22 @@ export async function addItemsToPlaylist(token, playlist_id, uris, position=null
  * Remove one or more items from a user's playlist.
  * @param {string} token The access token which contains the credentials and permissions that can be used to access a given resource or user's data.
  * @param {string} playlist_id The Spotify ID of the playlist.
- * @param {Track[]} tracks An array of objects containing Spotify URIs of the tracks or episodes to remove. A maximum of 100 objects can be sent at once.
+ * @param {object[]} tracks An array of objects containing Spotify URIs of the tracks or episodes to remove. A maximum of 100 objects can be sent at once.
  * @param {string} snapshot_id The playlist's snapshot ID against which you want to make the changes. The API will validate that the specified items exist and in the specified positions and make the changes, even if more recent changes have been made to the playlist.
  * @returns {Promise<object>} A snapshot ID for the playlist
  */
 export async function removePlaylistItems(token, playlist_id, tracks, snapshot_id=null) {
-    /** @type {RemoveTracksRequest} */ const body = {
-        "tracks": tracks
-    };
-    if (snapshot_id) body.snapshot_id = snapshot_id;
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/tracks`, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
-    }));
+        body: JSON.stringify({
+            tracks,
+            ...(snapshot_id && {snapshot_id})
+        })
+    })).json();
 }
 
 /**
@@ -548,16 +529,16 @@ export async function removePlaylistItems(token, playlist_id, tracks, snapshot_i
  * @returns {Promise<object>} A paged set of playlists
  */
 export async function getCurrentUsersPlaylists(token, limit=20, offset=0) {
-    const params = [];
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/playlists` + query, {
+    const query = new URLSearchParams({
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/me/playlists?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -569,16 +550,16 @@ export async function getCurrentUsersPlaylists(token, limit=20, offset=0) {
  * @returns {Promise<object>} A paged set of playlists
  */
 export async function getUsersPlaylists(token, user_id, limit=20, offset=0) {
-    const params = [];
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/users/${user_id}/playlists` + query, {
+    const query = new URLSearchParams({
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/users/${user_id}/playlists?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -592,20 +573,19 @@ export async function getUsersPlaylists(token, user_id, limit=20, offset=0) {
  * @returns {Promise<object>} A playlist
  */
 export async function createPlaylist(token, user_id, name, public_playlist=true, collaborative=false, description=null) {
-    /** @type {PlaylistDetailsRequest} */ const body = {
-        "name": name
-    }
-    if (!public_playlist) body.public = public_playlist;
-    if (collaborative) body.collaborative = collaborative;
-    if (description) body.description = description;
-    return await parseJSON(fetch(`${baseURL}/users/${user_id}/playlists`, {
+    return (await fetch(`${baseURL}/users/${user_id}/playlists`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
-    }));
+        body: JSON.stringify({
+            name,
+            ...(!public_playlist && {"public": public_playlist}),
+            ...(collaborative && {collaborative}),
+            ...(description && {description})
+        })
+    })).json();
 }
 
 /**
@@ -615,12 +595,12 @@ export async function createPlaylist(token, user_id, name, public_playlist=true,
  * @returns {Promise<object[]>|Promise<object>} A set of images on success, otherwise an `error` object
  */
 export async function getPlaylistCoverImage(token, playlist_id) {
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/images`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/images`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -631,14 +611,14 @@ export async function getPlaylistCoverImage(token, playlist_id) {
  * @returns {Promise<void>|Promise<object} An empty response if the image is uploaded, otherwise an `error` object
  */
 export async function addCustomPlaylistCoverImage(token, playlist_id, image) {
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/images`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/images`, {
         method: "PUT",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "image/jpeg"
         },
         body: image
-    }));
+    })).json();
 }
 
 /**
@@ -653,20 +633,20 @@ export async function addCustomPlaylistCoverImage(token, playlist_id, image) {
  * @returns {Promise<object>} Search response
  */
 export async function searchForItem(token, q, type, market=null, limit=20, offset=0, include_external=false) {
-    const params = [];
-    params.push(q);
-    params.push(`type=${type}`);
-    if (market) params.push(`market=${market}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    if (include_external) params.push("include_external=audio");
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/search` + query, {
+    const query = new URLSearchParams({
+        q,
+        type,
+        ...(market && {market}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset}),
+        ...(include_external && {"include_external": "audio"})
+    });
+    return (await fetch(`${baseURL}/search?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -677,15 +657,15 @@ export async function searchForItem(token, q, type, market=null, limit=20, offse
  * @returns {Promise<object>} A track
  */
 export async function getTrack(token, id, market=null) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/tracks/${id}` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/tracks/${id}?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -696,16 +676,16 @@ export async function getTrack(token, id, market=null) {
  * @returns {Promise<object>} A set of tracks
  */
 export async function getSeveralTracks(token, ids, market=null) {
-    const params = [];
-    params.push(ids);
-    if (market) params.push(`market=${market}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/tracks` + query, {
+    const query = new URLSearchParams({
+        ids,
+        ...(market && {market})
+    });
+    return (await fetch(`${baseURL}/tracks?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -717,17 +697,17 @@ export async function getSeveralTracks(token, ids, market=null) {
  * @returns {Promise<object>} Pages of tracks
  */
 export async function getUsersSavedTracks(token, market=null, limit=20, offset=0) {
-    const params = [];
-    if (market) params.push(`market=${market}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/tracks` + query, {
+    const query = new URLSearchParams({
+        ...(market && {market}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/me/tracks?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -738,28 +718,24 @@ export async function getUsersSavedTracks(token, market=null, limit=20, offset=0
  */
 export async function saveTracksForCurrentUser(token, ids) {
     if (typeof ids == "string") {
-        const params = [];
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/tracks` + query, {
+        const query = new URLSearchParams({ids});
+        return (await fetch(`${baseURL}/me/tracks?${query}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        return await parseJSON(fetch(`${baseURL}/me/tracks`, {
+        return (await fetch(`${baseURL}/me/tracks`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -771,28 +747,24 @@ export async function saveTracksForCurrentUser(token, ids) {
  */
 export async function removeUsersSavedTracks(token, ids) {
     if (typeof ids == "string") {
-        const params = [];
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/tracks` + query, {
+        const query = new URLSearchParams({ids});
+        return (await fetch(`${baseURL}/me/tracks?${query}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        return await parseJSON(fetch(`${baseURL}/me/tracks`, {
+        return (await fetch(`${baseURL}/me/tracks`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -803,15 +775,13 @@ export async function removeUsersSavedTracks(token, ids) {
  * @returns {Promise<boolean[]>|Promise<object>} An array of booleans on success, otherwise an `error` object
  */
 export async function checkUsersSavedTracks(token, ids) {
-    const params = [];
-    params.push(`ids=${ids}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/tracks/contains` + query, {
+    const query = new URLSearchParams({ids});
+    return (await fetch(`${baseURL}/me/tracks/contains?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -820,12 +790,12 @@ export async function checkUsersSavedTracks(token, ids) {
  * @returns {Promise<object>} A user
  */
 export async function getCurrentUsersProfile(token) {
-    return await parseJSON(fetch(`${baseURL}/me`, {
+    return (await fetch(`${baseURL}/me`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -838,17 +808,17 @@ export async function getCurrentUsersProfile(token) {
  * @returns {Promise<object>} Pages of artists or tracks
  */
 export async function getUsersTopItems(token, type, time_range="medium_term", limit=20, offset=0) {
-    const params = [];
-    if (time_range != "medium_term") params.push(`time_range=${time_range}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    if (offset !== 0) params.push(`offset=${offset}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/top/${type}` + query, {
+    const query = new URLSearchParams({
+        ...(time_range !== "medium_term" && {time_range}),
+        ...(limit !== 20 && {limit}),
+        ...(offset !== 0 && {offset})
+    });
+    return (await fetch(`${baseURL}/me/top/${type}?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -858,12 +828,12 @@ export async function getUsersTopItems(token, type, time_range="medium_term", li
  * @returns {Promise<object>} A user
  */
 export async function getUsersProfile(token, user_id) {
-    return await parseJSON(fetch(`${baseURL}/users/${user_id}`, {
+    return (await fetch(`${baseURL}/users/${user_id}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -874,16 +844,16 @@ export async function getUsersProfile(token, user_id) {
  * @returns {Promise<void>|Promise<object>} An empty response if the playlist is followed, otherwise an `error` object
  */
 export async function followPlaylist(token, playlist_id, public_playlist=true) {
-    /** @type {FollowPlaylistRequest} */ const body = {};
-    if (!public_playlist) body.public = public_playlist;
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/followers`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/followers`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(body)
-    }));
+        body: JSON.stringify({
+            ...(!public_playlist && {"public": public_playlist})
+        })
+    })).json();
 }
 
 /**
@@ -893,12 +863,12 @@ export async function followPlaylist(token, playlist_id, public_playlist=true) {
  * @returns {Promise<void>|Promise<object>} An empty response if the playlist is unfollowed, otherwise an `error` object
  */
 export async function unfollowPlaylist(token, playlist_id) {
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/followers`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/followers`, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -909,17 +879,17 @@ export async function unfollowPlaylist(token, playlist_id) {
  * @returns {Promise<object>} A paged set of artists
  */
 export async function getFollowedArtists(token, after=null, limit=20) {
-    const params = [];
-    params.push("type=artist");
-    if (after) params.push(`after=${after}`);
-    if (limit !== 20) params.push(`limit=${limit}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/following` + query, {
+    const query = new URLSearchParams({
+        "type": "artist",
+        ...(after && {after}),
+        ...(limit !== 20 && {limit})
+    });
+    return (await fetch(`${baseURL}/me/following?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -930,31 +900,26 @@ export async function getFollowedArtists(token, after=null, limit=20) {
  * @returns {Promise<void>|Promise<object} An empty response if the artist or user is followed, otherwise an `error` object
  */
 export async function followArtistsOrUsers(token, type, ids) {
-    const params = [];
-    params.push(`type=${type}`);
+    const query = new URLSearchParams({type});
     if (typeof ids == "string") {
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/following` + query, {
+        query.append("ids", ids);
+        return (await fetch(`${baseURL}/me/following?${query}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/following` + query, {
+        return (await fetch(`${baseURL}/me/following?${query}`, {
             method: "PUT",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -966,31 +931,26 @@ export async function followArtistsOrUsers(token, type, ids) {
  * @returns {Promise<void>|Promise<object} An empty response if the artist or user is unfollowed, otherwise an `error` object
  */
 export async function unfollowArtistsOrUsers(token, type, ids) {
-    const params = [];
-    params.push(`type=${type}`);
+    const query = new URLSearchParams({type});
     if (typeof ids == "string") {
-        params.push(`ids=${ids}`);
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/following` + query, {
+        query.append("ids", ids);
+        return (await fetch(`${baseURL}/me/following?${query}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             }
-        }));
+        })).json();
     }
     if (Array.isArray(ids)) {
-        const query = buildQueryString(params);
-        return await parseJSON(fetch(`${baseURL}/me/following` + query, {
+        return (await fetch(`${baseURL}/me/following?${query}`, {
             method: "DELETE",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                "ids": ids
-            })
-        }));
+            body: JSON.stringify({ids})
+        })).json();
     }
 }
 
@@ -1002,16 +962,13 @@ export async function unfollowArtistsOrUsers(token, type, ids) {
  * @returns {Promise<boolean[]>|Promise<object>} An array of booleans on success, otherwise an `error` object
  */
 export async function checkIfUserFollowsArtistsOrUsers(token, type, ids) {
-    const params = [];
-    params.push(`type=${type}`);
-    params.push(`ids=${ids}`);
-    const query = buildQueryString(params);
-    return await parseJSON(fetch(`${baseURL}/me/following/contains` + query, {
+    const query = new URLSearchParams({type, ids});
+    return (await fetch(`${baseURL}/me/following/contains?${query}`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
 
 /**
@@ -1021,69 +978,10 @@ export async function checkIfUserFollowsArtistsOrUsers(token, type, ids) {
  * @returns {Promise<boolean[]>|Promise<object>} An array of booleans on success, otherwise an `error` object
  */
 export async function checkIfCurrentUserFollowsPlaylist(token, playlist_id) {
-    return await parseJSON(fetch(`${baseURL}/playlists/${playlist_id}/followers/contains`, {
+    return (await fetch(`${baseURL}/playlists/${playlist_id}/followers/contains`, {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${token}`
         }
-    }));
+    })).json();
 }
-
-/**
- * Parse the response from an API call.
- * @param {Promise<any>} result A `Promise` containing the HTTP `Response` to the request.
- * @returns {Promise<object>} A JSON object
- */
-async function parseJSON(result) {
-    const response = await result;
-    return response.json();
-}
-
-/**
- * Builds a query string for an API call.
- * @param {string[]} params An array of query parameters.
- * @returns {string} A query string
- */
-function buildQueryString(params) {
-    if (params.length == 0) return "";
-    const urlEncodedParams = params.map(param => encodeURIComponent(param));
-    return `?${urlEncodedParams.join("&")}`;
-}
-
-/**
- * @typedef {Object} PlaylistDetailsRequest
- * @property {string} [name]
- * @property {boolean} [public_playlist]
- * @property {boolean} [collaborative]
- * @property {string} [description]
- */
-
-/**
- * @typedef {Object} ReorderPlaylistItemsRequest
- * @property {number} range_start
- * @property {number} insert_before
- * @property {number} [range_length]
- * @property {string} [snapshot_id]
- */
-
-/**
- * @typedef {Object} AddPlaylistItemsRequest
- * @property {string[]} uris
- * @property {number} [position]
- */
-
-/**
- * @typedef {Object} Track
- * @property {string} uri
- */
-
-/**
- * @typedef {Object} RemoveTracksRequest
- * @property {Track[]} tracks
- * @property {string} [snapshot_id]
- */
-
-/**
- * @typedef {Object} FollowPlaylistRequest
- * @property {boolean} [public_playlist]
- */
